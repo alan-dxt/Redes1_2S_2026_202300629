@@ -122,13 +122,175 @@ El cambio permite separar la VLAN nativa de las VLAN de usuarios y servidores ut
 | Total |  | | 27150 | 
 
 ## Dominios de colision
-| Dispositivo| Puertos activos | Dominios de colisión | Descripción|
-| --- | ---: | ---: | --- |
-| Switch Core               | X | X | Cada puerto activo constituye un dominio de colisión independiente|
-| Switch Distribución I+D 1 | 5 | X | Un dominio por cada enlace activo|
-| Switch Distribución I+D 2 | 8 | X | Un dominio por cada enlace activo|
-| Switch Distribución I+D 3 | 5 | X | Un dominio por cada enlace activo|
-| Switch Corporativo Ala 1  | 5 | X | Un dominio por cada puerto activo|
-| Switch Corporativo Ala 2  | 5 | X | Un dominio por cada puerto activo|
-| Switch Producción         | 3 | X | El puerto conectado al Hub constituye el segmento hacia Legacy|
-| Hub Legacy                | 4 | 1 compartido | Todos los equipos conectados al Hub comparten el mismo dominio de colisión |
+| Área | Dispositivo | Puertos activos | Dominios de colisión |
+| --- | --- | --- | --- |
+| Centro de Datos      | `SW_DATOS`    | 7 | 7 |
+| Centro de Datos      | `SW_DATOS_R1` | 4 | 4 |
+| Centro de Datos      | `SW_DATOS_R2` | 4 | 4 |
+| Centro de Datos      | `CORE`        | 11 | 11 |
+| Centro de I+D        | `SW_I+D`      | 5 | 5 |
+| Centro de I+D        | `SW_I+D_2`    | 5 | 5 |
+| Centro de I+D        | `SW_I+D_3`    | 5 | 5 |
+| Edificio Corporativo | `SW_EC`       | 3 | 3 |
+| Edificio Corporativo | `SW_EC_A1`    | 5 | 5 |
+| Edificio Corporativo | `SW_EC_A2`    | 5 | 5 |
+| Planta de Producción | `SW_LG`       | 3 | 3 |
+| **Legacy**           | **Hub**       |   **3 equipos** |     **1 compartido** |
+
+## Dominio del broadcast
+| VLAN ID | Nombre | Área / ubicación | Dispositivos pertenecientes | Dominio de broadcast |
+| ---: | --- | --- | --- | --- |
+|  **19** | GERENCIA | Edificio Corporativo | PCs y laptops administrativas | 1 |
+|  **29** | INVESTIGACION | Centro de I+D | PCs y laptops de I+D | 1 |
+|  **39** | PRODUCCION | Planta de Producción | Equipos del segmento Legacy | 1 |
+|  **49** | SERVIDORES | Centro de Datos | Server0, Server1, Server2 y Server3 | 1 |
+|  **59** | VISITANTES | Edificio Corporativo | Laptops de visitantes mediante AP | 1 |
+|  **99** | VLAN Nativa | Enlaces troncales | Troncales del campus | 1 |
+
+## Comandos por equipo
+
+### Core
+```
+enable
+configure terminal
+hostname CORE
+
+vtp domain Smart_2
+vtp password proyecto12S2026
+vtp mode server
+
+vlan 19
+name GERENCIA
+vlan 29
+name INVESTIGACION
+vlan 39
+name PRODUCCION
+vlan 49
+name SERVIDORES
+vlan 59
+name VISITANTES
+vlan 99
+name NATIVE
+
+interface range ...
+switchport mode trunk
+switchport trunk native vlan 99
+
+channel-group ... mode desirable
+interface port-channel ...
+switchport mode trunk
+switchport trunk native vlan 99
+
+spanning-tree mode rapid-pvst
+
+banner motd #Acceso Restringido - TechPark_202300629
+```
+
+### SW_Datos - Centro de datos
+```
+enable
+configure terminal
+hostname SW_DATOS
+
+vtp domain Smart_2
+vtp password proyecto12S2026
+vtp mode client
+
+
+interface range fa0/<X>-Y
+channel-group A mode desirable
+
+interface port-channel
+switchport mode trunk
+switchport trunk native vlan 99
+
+interface range fa0/<X>-Y
+switchport mode access
+switchport access vlan 49
+
+spanning-tree mode rapid-pvst
+
+banner motd #Acceso Restringido - TechPark_202300629
+```
+
+### SW_I+D
+```
+enable
+configure terminal
+hostname SW_I+D
+
+vtp domain Smart_2
+vtp password proyecto12S2026
+vtp mode client
+
+interface range fa0/<X>-Y
+switchport mode trunk
+switchport trunk native vlan 99
+
+interface range 0/<X>-<Y>
+channel-group A mode desirable
+
+spanning-tree mode rapid-pvst
+
+banner motd #Acceso Restringido - TechPark_202300629
+```
+
+### SW_I+D_2 / SW_I+D_3
+```
+vtp domain Smart_2
+vtp password proyecto12S2026
+vtp mode client
+
+interface range fa0/<X>-Y
+switchport mode trunk
+switchport trunk native vlan 99
+
+interface range fa0/<X>-Y
+switchport mode access
+switchport access vlan 29
+
+spanning-tree mode rapid-pvst
+
+banner motd #Acceso Restringido - TechPark_[Carné]#
+```
+
+### SW_LG - Planta de producción
+```
+enable
+configure terminal
+hostname SW_LG
+
+vtp domain Smart_2
+vtp password proyecto12S2026
+vtp mode client
+
+interface fa0/<X>
+switchport mode access
+switchport access vlan 39
+
+interface fa0/<Y>
+switchport mode trunk
+switchport trunk native vlan 99
+
+spanning-tree mode rapid-pvst
+
+banner motd #Acceso Restringido - TechPark_202300629
+```
+
+## Comandos de verificacion
+```
+show running-config
+show vlan brief
+show interfaces trunk
+show vtp status
+show vtp password
+show etherchannel summary
+show spanning-tree
+show spanning-tree vlan 19
+show spanning-tree vlan 29
+show spanning-tree vlan 39
+show spanning-tree vlan 49
+show spanning-tree vlan 59
+show mac address-table
+show interfaces status
+```
