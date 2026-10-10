@@ -1,6 +1,10 @@
 # Red de la ciudad comercial Cayalá
 
-Manual guía de la 
+El presente manual documenta el diseño, la configuración y la organización de una infraestructura de red para un pequeño sector de la ciudad, compuesto por los distritos empresariales 1 y 2, Distrito Moda, Hoteles y Vivienda. El proyecto se desarrolla en Cisco Packet Tracer, utilizando tecnologías de redes que permiten establecer una comunicación eficiente entre los distintos sectores.
+
+Se describen la topología de red, el direccionamiento IPv4, la segmentación mediante VLAN, la configuración de switches, los enlaces redundantes y los mecanismos de seguridad y administración implementados. Asimismo, se consideran las pruebas de conectividad y la identificación de los dominios de colisión para comprender el funcionamiento de la infraestructura.
+
+El objetivo es proporcionar una guía técnica que facilite la comprensión de la red, justifique las decisiones de diseño y sirva como referencia para su configuración, verificación y mantenimiento.
 
 ## Áreas seleccionadas
 
@@ -165,3 +169,16 @@ switchport trunk allowed vlan 19,29,39,49,59,99
 | Árbol (DM y V)            | 9  |
 | Estrella (H)              | 3  |
 | Total estimado            | **31** |
+
+## Modelo
+### Vista general
+<img src="./Imagenes/VistaGeneral.png" width="60%">
+
+### Pruebas
+
+#### Exitosas
+<img src="./Imagenes/Test1.png" width="60%">
+<img src="./Imagenes/Test2.png" width="60%">
+
+#### Fallidas
+<img src="./Imagenes/Test3.png" width="60%">
